@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  </head>
+  <body class="p-3">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="true">
+          <i class="bi bi-download"></i> Data Import
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab" aria-controls="backup" aria-selected="false">
+          <i class="bi bi-cloud-upload"></i> Create Backup
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
+          <i class="bi bi-gear"></i> Backup Settings
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="mainTabsContent">
+      <!-- Data Import Tab -->
+      <div class="tab-pane fade show active" id="import" role="tabpanel" aria-labelledby="import-tab">
+        <form id="importForm">
+          <!-- Website Selection -->
+          <div class="mb-3">
+            <label for="website" class="form-label fw-bold">Select Website:</label>
+            <select class="form-select" id="website" required>
+              <option value="">Loading websites...</option>
+            </select>
+            <div id="website-error" class="invalid-feedback"></div>
+          </div>
+          
+          <!-- Date Range -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Date Range:</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="date" class="form-control" id="startDate" title="Start Date" required>
+              </div>
+              <div class="col-6">
+                <input type="date" class="form-control" id="endDate" title="End Date" required>
+              </div>
+            </div>
+            <div id="date-error" class="invalid-feedback"></div>
+          </div>
+          
+          <!-- Dimensions -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Dimensions (select at least one):</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="dimension-query" data-dimension="query" checked>
+              <label class="form-check-label" for="dimension-query">Search Query</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="dimension-page" data-dimension="page" checked>
+              <label class="form-check-label" for="dimension-page">Page URL</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="dimension-country" data-dimension="country">
+              <label class="form-check-label" for="dimension-country">Country</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="dimension-device" data-dimension="device">
+              <label class="form-check-label" for="dimension-device">Device</label>
+            </div>
+            <div id="dimensions-error" class="invalid-feedback"></div>
+          </div>
+
+          <!-- Filters -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Filters:</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <label for="filter-query" class="form-label small">Query:</label>
+                <input type="text" class="form-control form-control-sm" id="filter-query" placeholder="e.g. 'example'">
+              </div>
+              <div class="col-6">
+                <label for="filter-page" class="form-label small">Page:</label>
+                <input type="text" class="form-control form-control-sm" id="filter-page" placeholder="e.g. '/about'">
+              </div>
+              <div class="col-6">
+                <label for="filter-country" class="form-label small">Country (ISO code):</label>
+                <input type="text" class="form-control form-control-sm" id="filter-country" placeholder="e.g. 'usa' or 'gbr'">
+                <div class="form-text small">Use 2-3 letter ISO country codes</div>
+              </div>
+              <div class="col-6">
+                <label for="filter-device" class="form-label small">Device:</label>
+                <select class="form-select form-select-sm" id="filter-device">
+                  <option value="">All devices</option>
+                  <option value="desktop">Desktop</option>
+                  <option value="mobile">Mobile</option>
+                  <option value="tablet">Tablet</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aggregation Type -->
+          <div class="mb-3">
+            <label for="aggregation" class="form-label fw-bold">Aggregation Type:</label>
+            <select class="form-select" id="aggregation">
+              <option value="auto" selected>Auto (Google default)</option>
+              <option value="byPage">By Page</option>
+              <option value="byProperty">By Property</option>
+            </select>
+          </div>
+
+          <!-- Search Type -->
+          <div class="mb-3">
+            <label for="searchType" class="form-label fw-bold">Search Type:</label>
+            <select class="form-select" id="searchType">
+              <option value="web" selected>Web</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+              <option value="news">News</option>
+              <option value="googleNews">Google News</option>
+              <option value="discover">Discover</option>
+            </select>
+          </div>
+          
+          <!-- Row Limit -->
+          <div class="mb-3">
+            <label for="rowLimit" class="form-label fw-bold">Row Limit:</label>
+            <select class="form-select" id="rowLimit" onchange="toggleCustomRowLimit()">
+              <option value="1000">1,000 rows</option>
+              <option value="10000">10,000 rows</option>
+              <option value="25000" selected>25,000 rows</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input type="number" class="form-control mt-2" id="customRowLimit" placeholder="Enter custom row limit" min="1" max="25000" style="display: none;">
+          </div>
+          
+          <!-- Sheet Selection -->
+          <div class="mb-3">
+            <label for="sheet" class="form-label fw-bold">Select Sheet:</label>
+            <div class="input-group">
+              <select class="form-select" id="sheet" required>
+                <option value="">Loading sheets...</option>
+              </select>
+              <button type="button" class="btn btn-outline-secondary" onclick="loadSheets()">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+            <div id="sheet-error" class="invalid-feedback"></div>
+          </div>
+
+          <!-- Clear Sheet Option -->
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="clearSheet" checked>
+              <label class="form-check-label" for="clearSheet">Clear sheet before import</label>
+            </div>
+          </div>
+          
+          <!-- Import Button -->
+          <button type="button" class="btn btn-primary w-100" id="importBtn" onclick="importData()">
+            <i class="bi bi-download"></i> Import Data
+          </button>
+        </form>
+        
+        <!-- Loading and Messages -->
+        <div id="loading" class="text-center mt-3" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Importing data, please wait...</p>
+        </div>
+        
+        <div id="message" class="mt-3"></div>
+      </div>
+
+      <!-- Create Backup Tab -->
+      <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
+        <form id="backupForm">
+          <!-- Website Selection -->
+          <div class="mb-3">
+            <label for="backupWebsite" class="form-label fw-bold">Select Website:</label>
+            <select class="form-select" id="backupWebsite" required>
+              <option value="">Loading websites...</option>
+            </select>
+            <div id="backup-website-error" class="invalid-feedback"></div>
+          </div>
+          
+          <!-- Backup Type -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Backup Type:</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" id="dailyBackup" name="backupType" value="daily" checked>
+              <label class="form-check-label" for="dailyBackup">Daily Backup (runs at 2 AM)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" id="monthlyBackup" name="backupType" value="monthly">
+              <label class="form-check-label" for="monthlyBackup">Monthly Backup (3rd day at 2 AM)</label>
+            </div>
+          </div>
+
+          <!-- Dimensions -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Dimensions (select at least one):</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="backup-dimension-query" data-dimension="query" checked>
+              <label class="form-check-label" for="backup-dimension-query">Search Query</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="backup-dimension-page" data-dimension="page" checked>
+              <label class="form-check-label" for="backup-dimension-page">Page URL</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="backup-dimension-country" data-dimension="country">
+              <label class="form-check-label" for="backup-dimension-country">Country</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="backup-dimension-device" data-dimension="device">
+              <label class="form-check-label" for="backup-dimension-device">Device</label>
+            </div>
+            <div id="backup-dimensions-error" class="invalid-feedback"></div>
+          </div>
+
+          <!-- Search Type -->
+          <div class="mb-3">
+            <label for="backupSearchType" class="form-label fw-bold">Search Type:</label>
+            <select class="form-select" id="backupSearchType">
+              <option value="web" selected>Web</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+              <option value="news">News</option>
+              <option value="googleNews">Google News</option>
+              <option value="discover">Discover</option>
+            </select>
+          </div>
+          
+          <!-- Options -->
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="separateUngrouped" checked>
+              <label class="form-check-label" for="separateUngrouped">Also backup ungrouped data in separate sheet</label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="emailNotification" checked>
+              <label class="form-check-label" for="emailNotification">Email me after each backup run</label>
+            </div>
+          </div>
+
+          <!-- Create Backup Button -->
+          <button type="button" class="btn btn-success w-100" id="setupBackupBtn" onclick="setupBackup()">
+            <i class="bi bi-cloud-upload"></i> Create Backup
+          </button>
+        </form>
+        
+        <!-- Loading and Messages -->
+        <div id="backupLoading" class="text-center mt-3" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Setting up backup...</p>
+        </div>
+        
+        <div id="backupMessage" class="mt-3"></div>
+      </div>
+
+      <!-- Backup Settings Tab -->
+      <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+        <div class="d-flex gap-2 mb-3">
+          <button type="button" class="btn btn-outline-secondary" onclick="loadBackupSettings()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Backup List
+          </button>
+          <button type="button" class="btn btn-outline-info" onclick="runDiagnostics()">
+            <i class="bi bi-tools"></i> Run Diagnostics
+          </button>
+        </div>
+        
+        <!-- Loading and Messages -->
+        <div id="backupListLoading" class="text-center" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Loading backups...</p>
+        </div>
+        
+        <div id="backupListError" class="alert alert-danger" style="display: none;"></div>
+        <div id="backupListMessage" class="alert alert-success" style="display: none;"></div>
+        
+        <!-- Backup List -->
+        <div id="backupList">
+          <div class="text-center text-muted py-4">
+            <i class="bi bi-cloud-slash fs-1"></i>
+            <p class="mt-2">No backups configured yet.<br>Use the "Create Backup" tab to set up your first backup.</p>
+          </div>
+        </div>
+        
+        <!-- Diagnostics Results -->
+        <div id="diagnosticsResults" class="mt-3" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Diagnostic Results</h5>
+            </div>
+            <div class="card-body">
+              <div id="diagnosticsContent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Initialize the interface
+      window.onload = function() {
+        loadSheets();
+        loadWebsites();
+        setDefaultDates();
+      };
+      
+      // Load websites from Search Console
+      function loadWebsites() {
+        google.script.run
+          .withSuccessHandler(populateWebsites)
+          .withFailureHandler(showWebsiteError)
+          .getWebsites();
+      }
+      
+      // Populate website dropdown
+      function populateWebsites(websites) {
+        const select = document.getElementById('website');
+        const backupSelect = document.getElementById('backupWebsite');
+        
+        // Clear selects
+        select.innerHTML = '<option value="">Select a website</option>';
+        backupSelect.innerHTML = '<option value="">Select a website</option>';
+        
+        if (websites && websites.length > 0) {
+          websites.forEach(site => {
+            // Import tab option
+            const option = document.createElement('option');
+            option.value = site.siteUrl;
+            option.textContent = site.siteUrl;
+            select.appendChild(option);
+            
+            // Backup tab option
+            const backupOption = document.createElement('option');
+            backupOption.value = site.siteUrl;
+            backupOption.textContent = site.siteUrl;
+            backupSelect.appendChild(backupOption);
+          });
+        } else {
+          select.innerHTML = '<option value="">No websites found</option>';
+          backupSelect.innerHTML = '<option value="">No websites found</option>';
+          showError('website-error', 'No verified websites found. Please verify your website in Search Console first.');
+          showError('backup-website-error', 'No verified websites found. Please verify your website in Search Console first.');
+        }
+      }
+      
+      // Show website loading error
+      function showWebsiteError(error) {
+        document.getElementById('website').innerHTML = '<option value="">Error loading websites</option>';
+        document.getElementById('backupWebsite').innerHTML = '<option value="">Error loading websites</option>';
+        showError('website-error', 'Error loading websites. Please ensure you have access to Search Console.');
+        showError('backup-website-error', 'Error loading websites. Please ensure you have access to Search Console.');
+      }
+      
+      // Set default dates (last 30 days)
+      function setDefaultDates() {
+        google.script.run
+          .withSuccessHandler(function(endDate) {
+            document.getElementById('endDate').value = endDate;
+          })
+          .getCurrentDate();
+          
+        google.script.run
+          .withSuccessHandler(function(startDate) {
+            document.getElementById('startDate').value = startDate;
+          })
+          .getThirtyDaysAgo();
+      }
+      
+      function loadSheets() {
+        const sheetSelect = document.getElementById('sheet');
+        sheetSelect.disabled = true;
+        sheetSelect.innerHTML = '<option value="">Loading...</option>';
+
+        google.script.run
+          .withSuccessHandler(populateSheets)
+          .withFailureHandler(showSheetError)
+          .getSheets();
+      }
+
+      function populateSheets(sheets) {
+        const select = document.getElementById('sheet');
+        select.innerHTML = '';
+        select.disabled = false;
+        
+        if (sheets && sheets.length > 0) {
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = '-- Select a sheet --';
+          select.appendChild(defaultOption);
+          
+          // Add all sheets
+          sheets.forEach(sheet => {
+            const option = document.createElement('option');
+            option.value = sheet;
+            option.textContent = sheet;
+            select.appendChild(option);
+          });
+        } else {
+          select.innerHTML = '<option value="">No sheets found</option>';
+        }
+      }
+
+      function showSheetError(error) {
+        document.getElementById('sheet').innerHTML = '<option value="">Error loading sheets</option>';
+        showError('sheet-error', 'Error loading sheets. Please try again.');
+      }
+      
+      // Toggle custom row limit input
+      function toggleCustomRowLimit() {
+        const rowLimit = document.getElementById('rowLimit');
+        const customRowLimit = document.getElementById('customRowLimit');
+        customRowLimit.style.display = rowLimit.value === 'custom' ? 'block' : 'none';
+      }
+
+      function importData() {
+        clearAllMessages();
+        
+        const website = document.getElementById('website').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const searchType = document.getElementById('searchType').value;
+        const sheetName = document.getElementById('sheet').value;
+        const clearSheet = document.getElementById('clearSheet').checked;
+        const countryFilter = document.getElementById('filter-country').value.trim();
+        
+        if (countryFilter && countryFilter.length > 3) {
+          showMessage('message', 'Country code should be 2-3 letters (e.g. "us" or "usa")', 'danger');
+          return;
+        }
+        
+        const filters = {
+          query: document.getElementById('filter-query').value.trim(),
+          page: document.getElementById('filter-page').value.trim(),
+          country: countryFilter,
+          device: document.getElementById('filter-device').value
+        };
+        
+        const rowLimitSelect = document.getElementById('rowLimit');
+        let rowLimit = rowLimitSelect.value;
+        if (rowLimit === 'custom') {
+          rowLimit = document.getElementById('customRowLimit').value;
+        }
+        
+        const aggregationType = document.getElementById('aggregation').value;
+        
+        // Get selected dimensions
+        const dimensionCheckboxes = document.querySelectorAll('#import input[type="checkbox"][data-dimension]:checked');
+        const dimensions = Array.from(dimensionCheckboxes).map(checkbox => checkbox.getAttribute('data-dimension'));
+        
+        console.log('Selected dimensions:', dimensions);
+        
+        // Validate inputs
+        if (!website) {
+          showError('website-error', 'Please select a website');
+          return;
+        }
+        
+        if (!startDate || !endDate) {
+          showError('date-error', 'Please select both start and end dates');
+          return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+          showError('date-error', 'Start date must be before end date');
+          return;
+        }
+        
+        if (dimensions.length === 0) {
+          showError('dimensions-error', 'Please select at least one dimension');
+          return;
+        }
+        
+        if (!sheetName) {
+          showError('sheet-error', 'Please select a sheet');
+          return;
+        }
+        
+        if (rowLimitSelect.value === 'custom' && (!rowLimit || rowLimit < 1 || rowLimit > 25000)) {
+          showMessage('message', 'Custom row limit must be between 1 and 25,000', 'danger');
+          return;
+        }
+        
+        // Show loading state
+        document.getElementById('importBtn').disabled = true;
+        document.getElementById('loading').style.display = 'block';
+        
+        // Call the import function
+        google.script.run
+          .withSuccessHandler(importSuccess)
+          .withFailureHandler(importError)
+          .importGSCData(
+            website, 
+            startDate, 
+            endDate, 
+            dimensions, 
+            searchType, 
+            parseInt(rowLimit), 
+            clearSheet, 
+            sheetName,
+            filters,
+            aggregationType
+          );
+      }
+      
+      // Handle successful import
+      function importSuccess(message) {
+        document.getElementById('importBtn').disabled = false;
+        document.getElementById('loading').style.display = 'none';
+        showMessage('message', message, 'success');
+      }
+      
+      // Handle import error
+      function importError(error) {
+        document.getElementById('importBtn').disabled = false;
+        document.getElementById('loading').style.display = 'none';
+        showMessage('message', 'Import failed: ' + error.message, 'danger');
+      }
+
+      // Load backup settings
+      function loadBackupSettings() {
+        document.getElementById('backupListLoading').style.display = 'block';
+        document.getElementById('backupListError').style.display = 'none';
+        document.getElementById('backupListMessage').style.display = 'none';
+        
+        google.script.run
+          .withSuccessHandler(displayBackupList)
+          .withFailureHandler(showBackupListError)
+          .getBackupList();
+      }
+
+      // Display backup list
+      function displayBackupList(backups) {
+        document.getElementById('backupListLoading').style.display = 'none';
+        const backupListDiv = document.getElementById('backupList');
+        
+        if (!backups || backups.length === 0) {
+          backupListDiv.innerHTML = `
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-cloud-slash fs-1"></i>
+              <p class="mt-2">No backups configured yet.<br>Use the "Create Backup" tab to set up your first backup.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        backups.forEach(backup => {
+          const statusClass = backup.status === 'active' ? 'success' : 'warning';
+          const statusIcon = backup.status === 'active' ? 'bi-check-circle' : 'bi-pause-circle';
+          const nextRun = backup.status === 'active' ? backup.nextRun : 'Paused';
+          
+          html += `
+            <div class="card mb-3 ${backup.status === 'paused' ? 'border-warning' : ''}">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 text-primary">${backup.website}</h6>
+                <span class="badge bg-${statusClass}">
+                  <i class="bi ${statusIcon}"></i> ${backup.status}
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="row g-2 mb-3">
+                  <div class="col-6"><small class="text-muted"><strong>Type:</strong> ${backup.backupType}</small></div>
+                  <div class="col-6"><small class="text-muted"><strong>Search Type:</strong> ${backup.searchType}</small></div>
+                  <div class="col-12"><small class="text-muted"><strong>Dimensions:</strong> ${backup.dimensions.join(', ')}</small></div>
+                  <div class="col-6"><small class="text-muted"><strong>Next Run:</strong> ${nextRun}</small></div>
+                  <div class="col-6"><small class="text-muted"><strong>Created:</strong> ${new Date(backup.createdAt).toLocaleDateString()}</small></div>
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-success btn-sm" onclick="runBackupNow('${backup.triggerUid}')">
+                    <i class="bi bi-play"></i> Run Now
+                  </button>
+                  ${backup.status === 'active' ? 
+                    `<button class="btn btn-warning btn-sm" onclick="pauseBackup('${backup.triggerUid}')">
+                      <i class="bi bi-pause"></i> Pause
+                    </button>` :
+                    `<button class="btn btn-info btn-sm" onclick="resumeBackup('${backup.triggerUid}')">
+                      <i class="bi bi-play-circle"></i> Resume
+                    </button>`
+                  }
+                  <button class="btn btn-danger btn-sm" onclick="deleteBackup('${backup.triggerUid}')">
+                    <i class="bi bi-trash"></i> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        backupListDiv.innerHTML = html;
+      }
+
+      // Show backup list error
+      function showBackupListError(error) {
+        document.getElementById('backupListLoading').style.display = 'none';
+        showMessage('backupListError', 'Error loading backups: ' + error.message, 'danger');
+      }
+
+      // Run backup now
+      function runBackupNow(triggerUid) {
+        if (!confirm('Are you sure you want to run this backup now?')) {
+          return;
+        }
+
+        showMessage('backupListMessage', 'Running backup...', 'info');
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showMessage('backupListMessage', 'Backup completed successfully!', 'success');
+            setTimeout(() => {
+              document.getElementById('backupListMessage').style.display = 'none';
+            }, 5000);
+          })
+          .withFailureHandler(function(error) {
+            showMessage('backupListMessage', 'Backup failed: ' + error.message, 'danger');
+          })
+          .runBackupManually(triggerUid);
+      }
+
+      // Pause backup
+      function pauseBackup(triggerUid) {
+        if (!confirm('Are you sure you want to pause this backup?')) {
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showMessage('backupListMessage', 'Backup paused successfully!', 'success');
+            loadBackupSettings(); // Refresh the list
+          })
+          .withFailureHandler(function(error) {
+            showMessage('backupListError', 'Failed to pause backup: ' + error.message, 'danger');
+          })
+          .pauseBackup(triggerUid);
+      }
+
+      // Resume backup
+      function resumeBackup(triggerUid) {
+        if (!confirm('Are you sure you want to resume this backup?')) {
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showMessage('backupListMessage', 'Backup resumed successfully!', 'success');
+            loadBackupSettings(); // Refresh the list
+          })
+          .withFailureHandler(function(error) {
+            showMessage('backupListError', 'Failed to resume backup: ' + error.message, 'danger');
+          })
+          .resumeBackup(triggerUid);
+      }
+
+      // Delete backup
+      function deleteBackup(triggerUid) {
+        if (!confirm('Are you sure you want to delete this backup? This action cannot be undone.')) {
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showMessage('backupListMessage', 'Backup deleted successfully!', 'success');
+            loadBackupSettings(); // Refresh the list
+          })
+          .withFailureHandler(function(error) {
+            showMessage('backupListError', 'Failed to delete backup: ' + error.message, 'danger');
+          })
+          .deleteBackup(triggerUid);
+      }
+
+      function setupBackup() {
+        clearAllMessages();
+        
+        const website = document.getElementById('backupWebsite').value;
+        const backupType = document.querySelector('input[name="backupType"]:checked')?.value;
+        const separateUngrouped = document.getElementById('separateUngrouped').checked;
+        const emailNotification = document.getElementById('emailNotification').checked;
+        const searchType = document.getElementById('backupSearchType').value;
+        
+        // Get selected dimensions for backup
+        const dimensionCheckboxes = document.querySelectorAll('#backup input[type="checkbox"][data-dimension]:checked');
+        const dimensions = Array.from(dimensionCheckboxes).map(checkbox => checkbox.getAttribute('data-dimension'));
+        
+        console.log('Setup backup parameters:', {
+          website, backupType, dimensions, searchType, separateUngrouped, emailNotification
+        });
+        
+        // Validate inputs
+        if (!website) {
+          showError('backup-website-error', 'Please select a website');
+          return;
+        }
+        
+        if (!backupType) {
+          showMessage('backupMessage', 'Please select a backup type', 'danger');
+          return;
+        }
+        
+        if (dimensions.length === 0) {
+          showError('backup-dimensions-error', 'Please select at least one dimension');
+          return;
+        }
+        
+        // Show loading state
+        document.getElementById('setupBackupBtn').disabled = true;
+        document.getElementById('backupLoading').style.display = 'block';
+        
+        google.script.run
+          .withSuccessHandler(function(message) {
+            document.getElementById('setupBackupBtn').disabled = false;
+            document.getElementById('backupLoading').style.display = 'none';
+            showMessage('backupMessage', message, 'success');
+          })
+          .withFailureHandler(function(error) {
+            document.getElementById('setupBackupBtn').disabled = false;
+            document.getElementById('backupLoading').style.display = 'none';
+            showMessage('backupMessage', 'Backup setup failed: ' + error.message, 'danger');
+          })
+          .setupBackup(website, backupType, dimensions, searchType, separateUngrouped, emailNotification);
+      }
+      
+      // Helper functions
+      function clearAllMessages() {
+        // Clear import tab messages
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+        document.getElementById('message').innerHTML = '';
+        document.getElementById('message').className = '';
+        
+        // Clear backup tab messages
+        document.getElementById('backupMessage').innerHTML = '';
+        document.getElementById('backupMessage').className = '';
+      }
+      
+      function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = message;
+          element.style.display = 'block';
+        }
+      }
+      
+      function showMessage(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.innerHTML = message;
+          element.className = `alert alert-${type}`;
+          element.style.display = 'block';
+        }
+      }
+
+      // Run diagnostics function
+      function runDiagnostics() {
+        document.getElementById('diagnosticsResults').style.display = 'block';
+        document.getElementById('diagnosticsContent').innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">Running diagnostics...</p></div>';
+        
+        google.script.run
+          .withSuccessHandler(function(results) {
+            let html = '<div class="font-monospace small">';
+            html += '<div><strong>Timestamp:</strong> ' + results.timestamp + '</div><br>';
+            
+            Object.keys(results.tests).forEach(test => {
+              const result = results.tests[test];
+              const status = result.startsWith('PASS') ? '✅' : '❌';
+              html += `<div>${status} <strong>${test}:</strong> ${result}</div>`;
+            });
+            
+            if (results.recommendations && results.recommendations.length > 0) {
+              html += '<br><div class="alert alert-info">';
+              html += '<strong>Recommendations:</strong><br>';
+              results.recommendations.forEach(rec => {
+                html += '• ' + rec + '<br>';
+              });
+              html += '</div>';
+            }
+            
+            html += '</div>';
+            document.getElementById('diagnosticsContent').innerHTML = html;
+          })
+          .withFailureHandler(function(error) {
+            document.getElementById('diagnosticsContent').innerHTML = 
+              '<div class="alert alert-danger">Diagnostics failed: ' + error.message + '</div>';
+          })
+          .testBackupDiagnostics();
+      }
+    </script>
+  </body>
+</html> 
